@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>班級注音聯絡簿</title>
+<style>
+:root{
+  --ink:#1f2430;--paper:#f6f4ee;--card:#fff;--line:#e6e0d4;--accent:#2f7d63;
+  --accent2:#c0613a;--muted:#8a8275;
+  --c1:#1f6fb2;--c2:#2e8b57;--c3:#c0392b;--c4:#7d4fb0;--c5:#b8860b;
+  --c6:#16807a;--c7:#c2185b;--c8:#3949ab;--c9:#558b2f;--c10:#d35400;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{margin:0;font-family:"PingFang TC","Heiti TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink);}
+.wrap{max-width:900px;margin:0 auto;padding:14px 12px 70px;}
+header.top{display:flex;align-items:center;gap:10px;padding:4px 2px 12px;}
+header.top .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#2e8b57);display:flex;align-items:center;justify-content:center;font-size:19px;}
+header.top h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.5px;}
+header.top p{margin:0;font-size:11.5px;color:var(--muted);}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:13px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.label{font-size:13px;font-weight:700;color:#555;margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+textarea{width:100%;min-height:150px;border:1.5px solid var(--line);border-radius:10px;padding:11px;font-size:16px;line-height:1.7;resize:vertical;font-family:inherit;}
+textarea:focus{outline:none;border-color:var(--accent);}
+.row{display:flex;gap:8px;flex-wrap:wrap;}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:700;}
+.btn-main{background:var(--accent);color:#fff;padding:12px 18px;font-size:15px;flex:1;min-width:130px;}
+.btn-main:active{transform:scale(.98);}
+.btn-ghost{background:#efece4;color:#555;padding:11px 13px;font-size:13.5px;}
+.btn-ghost.on{background:var(--accent);color:#fff;}
+.ctrls{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px;}
+.date-bar{display:flex;align-items:center;gap:8px;margin-bottom:11px;flex-wrap:wrap;}
+.date-bar input[type=date]{flex:1;min-width:150px;border:1.5px solid var(--line);border-radius:9px;padding:9px;font-size:15px;font-family:inherit;}
+.weather-sel{display:flex;gap:5px;flex-wrap:wrap;}
+.weather-sel button{background:#efece4;border-radius:9px;padding:7px 10px;font-size:15px;color:#666;}
+.weather-sel button.on{background:var(--accent2);color:#fff;}
+.hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.55;}
+.seg{display:flex;background:#efece4;border-radius:10px;padding:3px;margin-bottom:10px;}
+.seg button{flex:1;padding:9px 4px;font-size:13px;border-radius:8px;background:transparent;color:#777;}
+.seg button.on{background:#fff;color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.08);}
+
+/* 聯絡簿表格 */
+.sheet-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;}
+.sheet{background:#fff;border:2px solid #333;border-collapse:collapse;margin:0 auto;direction:rtl;}
+.sheet td{border:1px solid #999;text-align:center;vertical-align:top;padding:0;}
+.col-num{background:#5b7fbf;color:#fff;font-weight:700;font-size:15px;height:28px;width:62px;}
+.col-num.date-h{background:#b34;width:54px;}
+.cell{width:62px;min-height:40px;padding:6px 2px 9px;}
+.cell .gu{display:flex;flex-direction:column;align-items:center;margin-bottom:7px;cursor:pointer;border-radius:5px;padding:2px;line-height:1.0;}
+.cell .gu:active{background:#f0f0f0;}
+.cell .gu .han{font-size:30px;font-family:"Kaiti TC","BiauKai","DFKai-SB",serif;line-height:1.05;}
+.cell .gu .zy{position:relative;display:inline-flex;flex-direction:column;align-items:center;font-size:15px;color:inherit;line-height:1.02;margin-top:2px;font-weight:600;padding-right:7px;}
+.cell .gu .zy .zy-core{display:flex;flex-direction:column;align-items:center;}
+.cell .gu .zy .zy-core span{display:block;transform:scaleX(.92);}
+.cell .gu .zy .zy-tone{position:absolute;right:-1px;top:50%;transform:translateY(-50%);font-size:14px;line-height:1;}
+.cell .gu .zy .zy-light{font-size:14px;line-height:1;margin-bottom:-1px;}
+.cell .gu.han-only .zy{display:none;}
+.cell .gu.poly .han{position:relative;}
+.cell .gu.poly .han::after{content:"";position:absolute;top:0;right:-2px;width:5px;height:5px;border-radius:50%;background:var(--accent2);}
+.cell .gu.need-fix{outline:1.5px dashed #d33;outline-offset:-1px;border-radius:6px;}
+.cell .gu.need-fix .han::before{content:"補";position:absolute;font-size:9px;color:#d33;transform:translate(-13px,-2px);}
+.date-col{width:54px;background:#fdfcf8;}
+.date-col .dcol{display:flex;flex-direction:column;align-items:center;padding:5px 0;}
+.date-col .dch{font-size:21px;font-family:"Kaiti TC",serif;color:#b34;font-weight:700;line-height:1.18;}
+.date-col .dgap{height:8px;}
+.date-col .wth{font-size:26px;padding:6px 0 2px;text-align:center;}
+.blank-tip{padding:40px 16px;text-align:center;color:#bbb;font-size:14px;line-height:1.9;}
+
+/* 跳色：整欄同色 */
+.cc1{color:var(--c1);}.cc2{color:var(--c2);}.cc3{color:var(--c3);}.cc4{color:var(--c4);}.cc5{color:var(--c5);}
+.cc6{color:var(--c6);}.cc7{color:var(--c7);}.cc8{color:var(--c8);}.cc9{color:var(--c9);}.cc10{color:var(--c10);}
+
+/* 編輯彈窗 */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;z-index:50;}
+.modal-bg.show{display:flex;}
+.modal{background:#fff;width:100%;max-width:900px;margin:0 auto;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:82vh;overflow-y:auto;animation:up .22s ease;}
+@keyframes up{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal h3{margin:0 0 4px;font-size:17px;}
+.modal .cur{font-size:13px;color:#888;margin-bottom:12px;}
+.modal .cur b{color:var(--accent);font-size:20px;}
+.opt-label{font-size:12.5px;font-weight:700;color:#666;margin:13px 0 7px;}
+.reads{display:flex;flex-wrap:wrap;gap:8px;}
+.read-chip{border:1.5px solid var(--line);background:#fafafa;border-radius:9px;padding:9px 13px;font-size:16px;min-width:52px;text-align:center;}
+.read-chip.sel{border-color:var(--accent);background:#eaf5ef;color:var(--accent);font-weight:700;}
+.zy-edit input{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:10px;font-size:16px;font-family:inherit;}
+.tone-row{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
+.tone-btn{border:1.5px solid var(--line);background:#fafafa;border-radius:9px;padding:8px 12px;font-size:15px;min-width:46px;}
+.tone-btn.sel{border-color:var(--accent);background:#eaf5ef;color:var(--accent);font-weight:700;}
+.modal-actions{display:flex;gap:9px;margin-top:18px;}
+.modal-actions button{flex:1;padding:13px;font-size:15px;}
+.save-x{background:var(--accent);color:#fff;}
+.foot{text-align:center;font-size:11px;color:#bbb;margin-top:16px;}
+
+/* ===== 黑板底模式 ===== */
+body.board-mode #sheetCard{background:linear-gradient(160deg,#6b4a2b,#4e3419);border-color:#3a2713;padding:16px;}
+body.board-mode .sheet{background:radial-gradient(circle at 30% 18%,#33503e,#243a2c);border:3px solid #1c2c22;box-shadow:inset 0 0 50px rgba(0,0,0,.4);}
+body.board-mode .sheet td{border-color:rgba(255,255,255,.18);}
+body.board-mode .col-num{background:rgba(0,0,0,.3);color:#f3f1e9;}
+body.board-mode .col-num.date-h{background:rgba(120,40,40,.55);}
+body.board-mode .cell .gu .han{color:#f3f1e9;text-shadow:0 0 2px rgba(255,255,255,.12);font-family:"Kaiti TC","BiauKai",serif;}
+body.board-mode .cell .gu .zy{color:#dfe6d8;}
+/* 黑板模式下跳色改用粉筆系亮色 */
+body.board-mode .cc1{color:#aaccff;}body.board-mode .cc2{color:#a7e8b0;}body.board-mode .cc3{color:#ffb3a7;}
+body.board-mode .cc4{color:#d6b8f0;}body.board-mode .cc5{color:#f0d68b;}body.board-mode .cc6{color:#9fe3dd;}
+body.board-mode .cc7{color:#f5b0cd;}body.board-mode .cc8{color:#b0bdf0;}body.board-mode .cc9{color:#c3e89a;}body.board-mode .cc10{color:#f0c089;}
+body.board-mode .date-col{background:rgba(255,255,255,.04);}
+body.board-mode .date-col .dch{color:#ffd9a0;}
+body.board-mode .cell .gu.need-fix{outline-color:#ff9c8a;}
+
+@media print{
+  body{background:#fff;}
+  .card,header.top,.ctrls,.row,.foot,.hint{display:none !important;}
+  .sheet-scroll{overflow:visible;}
+  .sheet{page-break-inside:avoid;}
+  #sheetCard{border:none;box-shadow:none;padding:0;margin:0;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">📒</div>
+    <div><h1>班級注音聯絡簿</h1><p>打中文 · 自動轉注音 · 一字一格 · 可列印</p></div>
+  </header>
+
+  <div class="card">
+    <div class="date-bar">
+      <input type="date" id="dateInput" onchange="render()">
+      <div class="weather-sel" id="weatherSel"></div>
+    </div>
+    <div class="label">✏️ 聯絡簿內容（每行一個項目，最多 10 行）</div>
+    <textarea id="input" placeholder="例：&#10;國語第八課生字&#10;數學習作 P32～P35&#10;明天穿運動服&#10;朗讀國語甲本"></textarea>
+    <div class="row" style="margin-top:10px;">
+      <button class="btn-main" onclick="generate()">產生聯絡簿</button>
+      <button class="btn-ghost" onclick="clearAll()">清空</button>
+    </div>
+    <div class="hint">💡 每行一項，會自動排成一欄（由右到左）。頁數範圍可直接打波浪號，例：P44～P49。<br>點任何一個字 → 改注音 / 改聲調 / 切成國字。橘點＝多音字，記得確認念法。</div>
+  </div>
+
+  <div class="card">
+    <div class="seg">
+      <button id="mZy" class="on" onclick="setTextMode('zy')">純注音</button>
+      <button id="mBoth" onclick="setTextMode('both')">注音＋國字</button>
+      <button id="mHan" onclick="setTextMode('han')">純國字</button>
+    </div>
+    <div class="ctrls">
+      <button class="btn-ghost on" id="bColor" onclick="toggleColor()">🌈 整欄跳色</button>
+      <button class="btn-ghost" id="bPoly" onclick="togglePoly()">🔸 多音提醒：關</button>
+      <button class="btn-ghost" id="bStyle" onclick="toggleStyle()">切換：格子底</button>
+    </div>
+  </div>
+
+  <div class="card" id="sheetCard">
+    <div class="sheet-scroll">
+      <div id="sheetHost">
+        <div class="blank-tip">在上面打字後<br>按「產生聯絡簿」<br>這裡就會出現一字一格的注音聯絡簿 👆</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="btn-ghost" style="flex:1" onclick="window.print()">🖨️ 列印 / 存成 PDF</button>
+    <button class="btn-ghost" style="flex:1" onclick="copyText()">📋 複製文字</button>
+  </div>
+
+  <div class="foot">三寶爸工具 · 班級注音聯絡簿 v1</div>
+</div>
+
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3>編輯這個字</h3>
+    <div class="cur">目前：<b id="mCur">—</b></div>
+    <div class="seg">
+      <button id="segZy" class="on" onclick="mSetMode('zy')">顯示注音</button>
+      <button id="segHan" onclick="mSetMode('han')">只顯示國字</button>
+    </div>
+    <div id="zyArea">
+      <div class="opt-label">選擇讀音（多音字）</div>
+      <div class="reads" id="mReads"></div>
+      <div class="opt-label">或手動輸入注音</div>
+      <div class="zy-edit"><input id="mZyInput" placeholder="例：ㄍㄨㄛˊ" autocomplete="off"></div>
+      <div class="opt-label">聲調</div>
+      <div class="tone-row" id="mTones"></div>
+    </div>
+    <div class="modal-actions"><button class="save-x" onclick="saveEdit()">完成</button></div>
+  </div>
+</div>
+
+<script>
+const ZY={"一":["ㄧ","ㄧˋ"],"二":["ㄦˋ"],"三":["ㄙㄢ"],"四":["ㄙˋ"],"五":["ㄨˇ"],"六":["ㄌㄧㄡˋ"],"七":["ㄑㄧ"],"八":["ㄅㄚ"],"九":["ㄐㄧㄡˇ"],"十":["ㄕˊ"],"零":["ㄌㄧㄥˊ"],"百":["ㄅㄞˇ"],"千":["ㄑㄧㄢ"],"第":["ㄉㄧˋ"],"兩":["ㄌㄧㄤˇ"],"星":["ㄒㄧㄥ"],"期":["ㄑㄧˊ"],"日":["ㄖˋ"],"月":["ㄩㄝˋ"],"年":["ㄋㄧㄢˊ"],"天":["ㄊㄧㄢ"],"今":["ㄐㄧㄣ"],"明":["ㄇㄧㄥˊ"],"昨":["ㄗㄨㄛˊ"],"週":["ㄓㄡ"],"早":["ㄗㄠˇ"],"晚":["ㄨㄢˇ"],"上":["ㄕㄤˋ","ㄕㄤˇ"],"下":["ㄒㄧㄚˋ"],"午":["ㄨˇ"],"國":["ㄍㄨㄛˊ"],"語":["ㄩˇ"],"數":["ㄕㄨˋ","ㄕㄨˇ"],"學":["ㄒㄩㄝˊ"],"英":["ㄧㄥ"],"文":["ㄨㄣˊ"],"自":["ㄗˋ"],"然":["ㄖㄢˊ"],"社":["ㄕㄜˋ"],"會":["ㄏㄨㄟˋ","ㄎㄨㄞˋ"],"音":["ㄧㄣ"],"樂":["ㄌㄜˋ","ㄩㄝˋ"],"體":["ㄊㄧˇ"],"育":["ㄩˋ"],"美":["ㄇㄟˇ"],"術":["ㄕㄨˋ"],"課":["ㄎㄜˋ"],"健":["ㄐㄧㄢˋ"],"康":["ㄎㄤ"],"電":["ㄉㄧㄢˋ"],"腦":["ㄋㄠˇ"],"作":["ㄗㄨㄛˋ"],"業":["ㄧㄝˋ"],"習":["ㄒㄧˊ"],"練":["ㄌㄧㄢˋ"],"寫":["ㄒㄧㄝˇ"],"生":["ㄕㄥ"],"字":["ㄗˋ"],"詞":["ㄘˊ"],"造":["ㄗㄠˋ"],"句":["ㄐㄩˋ"],"本":["ㄅㄣˇ"],"簿":["ㄅㄨˋ"],"訂":["ㄉㄧㄥˋ"],"正":["ㄓㄥˋ","ㄓㄥ"],"複":["ㄈㄨˋ"],"預":["ㄩˋ"],"考":["ㄎㄠˇ"],"試":["ㄕˋ"],"卷":["ㄐㄩㄢˋ"],"測":["ㄘㄜˋ"],"驗":["ㄧㄢˋ"],"題":["ㄊㄧˊ"],"頁":["ㄧㄝˋ"],"讀":["ㄉㄨˊ","ㄉㄡˋ"],"背":["ㄅㄟˋ","ㄅㄟ"],"誦":["ㄙㄨㄥˋ"],"抄":["ㄔㄠ"],"畫":["ㄏㄨㄚˋ"],"圈":["ㄑㄩㄢ"],"完":["ㄨㄢˊ"],"成":["ㄔㄥˊ"],"交":["ㄐㄧㄠ"],"收":["ㄕㄡ"],"改":["ㄍㄞˇ"],"帶":["ㄉㄞˋ"],"穿":["ㄔㄨㄢ"],"運":["ㄩㄣˋ"],"動":["ㄉㄨㄥˋ"],"服":["ㄈㄨˊ"],"鞋":["ㄒㄧㄝˊ"],"水":["ㄕㄨㄟˇ"],"壺":["ㄏㄨˊ"],"杯":["ㄅㄟ"],"傘":["ㄙㄢˇ"],"帽":["ㄇㄠˋ"],"袋":["ㄉㄞˋ"],"餐":["ㄘㄢ"],"具":["ㄐㄩˋ"],"碗":["ㄨㄢˇ"],"筷":["ㄎㄨㄞˋ"],"湯":["ㄊㄤ"],"匙":["ㄔˊ","ㄕˊ"],"書":["ㄕㄨ"],"包":["ㄅㄠ"],"筆":["ㄅㄧˇ"],"鉛":["ㄑㄧㄢ"],"色":["ㄙㄜˋ","ㄕㄞˇ"],"剪":["ㄐㄧㄢˇ"],"刀":["ㄉㄠ"],"膠":["ㄐㄧㄠ"],"尺":["ㄔˇ"],"橡":["ㄒㄧㄤˋ"],"皮":["ㄆㄧˊ"],"擦":["ㄘㄚ"],"簽":["ㄑㄧㄢ"],"名":["ㄇㄧㄥˊ"],"家":["ㄐㄧㄚ"],"長":["ㄔㄤˊ","ㄓㄤˇ"],"師":["ㄕ"],"請":["ㄑㄧㄥˇ"],"假":["ㄐㄧㄚˋ","ㄐㄧㄚˇ"],"病":["ㄅㄧㄥˋ"],"事":["ㄕˋ"],"聯":["ㄌㄧㄢˊ"],"絡":["ㄌㄨㄛˋ"],"要":["ㄧㄠˋ","ㄧㄠ"],"記":["ㄐㄧˋ"],"得":["ㄉㄜˊ","ㄉㄟˇ","˙ㄉㄜ"],"回":["ㄏㄨㄟˊ"],"看":["ㄎㄢˋ","ㄎㄢ"],"聽":["ㄊㄧㄥ"],"說":["ㄕㄨㄛ"],"問":["ㄨㄣˋ"],"檢":["ㄐㄧㄢˇ"],"查":["ㄔㄚˊ"],"準":["ㄓㄨㄣˇ"],"備":["ㄅㄟˋ"],"和":["ㄏㄢˋ","ㄏㄜˊ"],"的":["˙ㄉㄜ","ㄉㄧˊ","ㄉㄧˋ"],"了":["˙ㄌㄜ","ㄌㄧㄠˇ"],"是":["ㄕˋ"],"有":["ㄧㄡˇ"],"在":["ㄗㄞˋ"],"去":["ㄑㄩˋ"],"來":["ㄌㄞˊ"],"到":["ㄉㄠˋ"],"給":["ㄍㄟˇ","ㄐㄧˇ"],"把":["ㄅㄚˇ","ㄅㄚˋ"],"放":["ㄈㄤˋ"],"個":["ㄍㄜˋ","˙ㄍㄜ"],"也":["ㄧㄝˇ"],"很":["ㄏㄣˇ"],"好":["ㄏㄠˇ","ㄏㄠˋ"],"不":["ㄅㄨˋ","ㄅㄨˊ"],"我":["ㄨㄛˇ"],"你":["ㄋㄧˇ"],"他":["ㄊㄚ"],"她":["ㄊㄚ"],"們":["˙ㄇㄣ"],"小":["ㄒㄧㄠˇ"],"心":["ㄒㄧㄣ"],"安":["ㄢ"],"全":["ㄑㄩㄢˊ"],"行":["ㄒㄧㄥˊ","ㄏㄤˊ"],"重":["ㄓㄨㄥˋ","ㄔㄨㄥˊ"],"種":["ㄓㄨㄥˇ","ㄓㄨㄥˋ"],"地":["ㄉㄧˋ","˙ㄉㄜ"],"為":["ㄨㄟˋ","ㄨㄟˊ"],"教":["ㄐㄧㄠ","ㄐㄧㄠˋ"],"校":["ㄒㄧㄠˋ"],"班":["ㄅㄢ"],"級":["ㄐㄧˊ"],"同":["ㄊㄨㄥˊ"],"老":["ㄌㄠˇ"],"友":["ㄧㄡˇ"],"謝":["ㄒㄧㄝˋ"],"對":["ㄉㄨㄟˋ"],"次":["ㄘˋ"],"片":["ㄆㄧㄢˋ","ㄆㄧㄢ"],"張":["ㄓㄤ"],"頭":["ㄊㄡˊ","˙ㄊㄡ"],"黑":["ㄏㄟ"],"板":["ㄅㄢˇ"],"白":["ㄅㄞˊ"],"紅":["ㄏㄨㄥˊ"],"花":["ㄏㄨㄚ"],"用":["ㄩㄥˋ"],"工":["ㄍㄨㄥ"],"分":["ㄈㄣ","ㄈㄣˋ"],"開":["ㄎㄞ"],"關":["ㄍㄨㄢ"],"前":["ㄑㄧㄢˊ"],"後":["ㄏㄡˋ"],"裡":["ㄌㄧˇ"],"外":["ㄨㄞˋ"],"中":["ㄓㄨㄥ","ㄓㄨㄥˋ"],"大":["ㄉㄚˋ","ㄉㄞˋ"],"多":["ㄉㄨㄛ"],"少":["ㄕㄠˇ","ㄕㄠˋ"],"做":["ㄗㄨㄛˋ"],"可":["ㄎㄜˇ","ㄎㄜˋ"],"以":["ㄧˇ"],"能":["ㄋㄥˊ"],"還":["ㄏㄞˊ","ㄏㄨㄢˊ"],"再":["ㄗㄞˋ"],"都":["ㄉㄡ","ㄉㄨ"],"沒":["ㄇㄟˊ","ㄇㄛˋ"],"應":["ㄧㄥ","ㄧㄥˋ"],"朗":["ㄌㄤˇ"],"磁":["ㄘˊ"],"洗":["ㄒㄧˇ"],"桌":["ㄓㄨㄛ"],"較":["ㄐㄧㄠˋ"],"祝":["ㄓㄨˋ"],"甲":["ㄐㄧㄚˇ"],"乙":["ㄧˇ"],"丙":["ㄅㄧㄥˇ"],"卡":["ㄎㄚˇ","ㄑㄧㄚˇ"],"範":["ㄈㄢˋ"],"圍":["ㄨㄟˊ"],"冊":["ㄘㄜˋ"],"首":["ㄕㄡˇ"],"詩":["ㄕ"],"念":["ㄋㄧㄢˋ"],"默":["ㄇㄛˋ"],"訊":["ㄒㄩㄣˋ"],"息":["ㄒㄧˊ","˙ㄒㄧ"],"訊息":["ㄒㄩㄣˋ"],"垃":["ㄌㄜˋ","ㄌㄚ"],"圾":["ㄙㄜˋ","ㄐㄧ"],"雨":["ㄩˇ"],"晴":["ㄑㄧㄥˊ"],"陰":["ㄧㄣ"],"風":["ㄈㄥ"],"雲":["ㄩㄣˊ"],"雪":["ㄒㄩㄝˇ"],"氣":["ㄑㄧˋ"],"溫":["ㄨㄣ"],"度":["ㄉㄨˋ","ㄉㄨㄛˋ"],"子":["ㄗˇ","˙ㄗ"],"衛":["ㄨㄟˋ"],"紙":["ㄓˇ"],"庭":["ㄊㄧㄥˊ"],"幾":["ㄐㄧˇ","ㄐㄧ"],"齊":["ㄑㄧˊ"],"品":["ㄆㄧㄣˇ"],"制":["ㄓˋ"],"便":["ㄅㄧㄢˋ","ㄆㄧㄢˊ"],"當":["ㄉㄤ","ㄉㄤˋ"],"盒":["ㄏㄜˊ"],"棒":["ㄅㄤˋ"],"真":["ㄓㄣ"],"加":["ㄐㄧㄚ"],"油":["ㄧㄡˊ"],"愛":["ㄞˋ"],"喜":["ㄒㄧˇ"],"歡":["ㄏㄨㄢ"],"快":["ㄎㄨㄞˋ"],"慢":["ㄇㄢˋ"],"高":["ㄍㄠ"],"興":["ㄒㄧㄥˋ","ㄒㄧㄥ"],"門":["ㄇㄣˊ"],"窗":["ㄔㄨㄤ"],"椅":["ㄧˇ"],"坐":["ㄗㄨㄛˋ"],"站":["ㄓㄢˋ"],"走":["ㄗㄡˇ"],"跑":["ㄆㄠˇ"],"跳":["ㄊㄧㄠˋ"],"玩":["ㄨㄢˊ"],"笑":["ㄒㄧㄠˋ"],"哭":["ㄎㄨ"],"睡":["ㄕㄨㄟˋ"],"覺":["ㄐㄩㄝˊ","ㄐㄧㄠˋ"],"吃":["ㄔ"],"喝":["ㄏㄜ"],"飯":["ㄈㄢˋ"],"菜":["ㄘㄞˋ"],"果":["ㄍㄨㄛˇ"],"牛":["ㄋㄧㄡˊ"],"奶":["ㄋㄞˇ"],"蛋":["ㄉㄢˋ"],"魚":["ㄩˊ"],"肉":["ㄖㄡˋ"],"米":["ㄇㄧˇ"],"媽":["ㄇㄚ"],"爸":["ㄅㄚˋ"],"哥":["ㄍㄜ"],"姐":["ㄐㄧㄝˇ"],"弟":["ㄉㄧˋ"],"妹":["ㄇㄟˋ"],"爺":["ㄧㄝˊ"],"婆":["ㄆㄛˊ"],"叔":["ㄕㄨˊ"],"阿":["ㄚ","ㄜ"],"朋":["ㄆㄥˊ"],"室":["ㄕˋ"],"位":["ㄨㄟˋ"],"東":["ㄉㄨㄥ"],"西":["ㄒㄧ"],"南":["ㄋㄢˊ"],"北":["ㄅㄟˇ"],"左":["ㄗㄨㄛˇ"],"右":["ㄧㄡˋ"],"邊":["ㄅㄧㄢ"],"間":["ㄐㄧㄢ","ㄐㄧㄢˋ"],"內":["ㄋㄟˋ"],"黃":["ㄏㄨㄤˊ"],"藍":["ㄌㄢˊ"],"綠":["ㄌㄩˋ"],"紫":["ㄗˇ"],"灰":["ㄏㄨㄟ"],"亮":["ㄌㄧㄤˋ"],"暗":["ㄢˋ"],"新":["ㄒㄧㄣ"],"舊":["ㄐㄧㄡˋ"],"短":["ㄉㄨㄢˇ"],"圓":["ㄩㄢˊ"],"方":["ㄈㄤ"],"形":["ㄒㄧㄥˊ"],"圖":["ㄊㄨˊ"],"條":["ㄊㄧㄠˊ"],"些":["ㄒㄧㄝ"],"每":["ㄇㄟˇ"],"就":["ㄐㄧㄡˋ"],"才":["ㄘㄞˊ"],"已":["ㄧˇ"],"經":["ㄐㄧㄥ"],"先":["ㄒㄧㄢ"],"讓":["ㄖㄤˋ"],"幫":["ㄅㄤ"],"忙":["ㄇㄤˊ"],"懂":["ㄉㄨㄥˇ"],"知":["ㄓ"],"道":["ㄉㄠˋ"],"想":["ㄒㄧㄤˇ"],"忘":["ㄨㄤˋ"],"准":["ㄓㄨㄣˇ"],"遲":["ㄔˊ"],"刻":["ㄎㄜˋ"],"鐘":["ㄓㄨㄥ"],"秒":["ㄇㄧㄠˇ"],"剛":["ㄍㄤ"],"始":["ㄕˇ"],"終":["ㄓㄨㄥ"],"停":["ㄊㄧㄥˊ"],"等":["ㄉㄥˇ"],"候":["ㄏㄡˋ"],"排":["ㄆㄞˊ"],"隊":["ㄉㄨㄟˋ"],"集":["ㄐㄧˊ"],"合":["ㄏㄜˊ"],"園":["ㄩㄢˊ"],"操":["ㄘㄠ"],"場":["ㄔㄤˇ","ㄔㄤˊ"],"館":["ㄍㄨㄢˇ"],"廁":["ㄘㄜˋ"],"所":["ㄙㄨㄛˇ"],"廊":["ㄌㄤˊ"],"梯":["ㄊㄧ"],"旗":["ㄑㄧˊ"],"升":["ㄕㄥ"],"降":["ㄐㄧㄤˋ","ㄒㄧㄤˊ"],"禮":["ㄌㄧˇ"],"拜":["ㄅㄞˋ"],"墊":["ㄉㄧㄢˋ"],"夾":["ㄐㄧㄚˊ","ㄐㄧㄚ"],"釘":["ㄉㄧㄥ","ㄉㄧㄥˋ"],"針":["ㄓㄣ"],"線":["ㄒㄧㄢˋ"],"球":["ㄑㄧㄡˊ"],"棋":["ㄑㄧˊ"],"件":["ㄐㄧㄢˋ"],"拿":["ㄋㄚˊ"],"拉":["ㄌㄚ"],"推":["ㄊㄨㄟ"],"丟":["ㄉㄧㄡ"],"撿":["ㄐㄧㄢˇ"],"找":["ㄓㄠˇ"],"買":["ㄇㄞˇ"],"賣":["ㄇㄞˋ"],"借":["ㄐㄧㄝˋ"],"送":["ㄙㄨㄥˋ"],"拍":["ㄆㄞ"],"打":["ㄉㄚˇ"],"掃":["ㄙㄠˇ","ㄙㄠˋ"],"倒":["ㄉㄠˋ","ㄉㄠˇ"],"裝":["ㄓㄨㄤ"],"折":["ㄓㄜˊ","ㄕㄜˊ"],"錯":["ㄘㄨㄛˋ"],"難":["ㄋㄢˊ","ㄋㄢˋ"],"易":["ㄧˋ"],"累":["ㄌㄟˋ","ㄌㄟˇ"],"餓":["ㄜˋ"],"飽":["ㄅㄠˇ"],"渴":["ㄎㄜˇ"],"熱":["ㄖㄜˋ"],"冷":["ㄌㄥˇ"],"涼":["ㄌㄧㄤˊ"],"乾":["ㄍㄢ","ㄑㄧㄢˊ"],"淨":["ㄐㄧㄥˋ"],"髒":["ㄗㄤ"],"亂":["ㄌㄨㄢˋ"],"滿":["ㄇㄢˇ"],"空":["ㄎㄨㄥ","ㄎㄨㄥˋ"],"輕":["ㄑㄧㄥ"],"半":["ㄅㄢˋ"],"雙":["ㄕㄨㄤ"],"份":["ㄈㄣˋ"],"組":["ㄗㄨˇ"],"遍":["ㄅㄧㄢˋ"],"段":["ㄉㄨㄢˋ"],"篇":["ㄆㄧㄢ"],"陽":["ㄧㄤˊ"],"光":["ㄍㄨㄤ"],"雷":["ㄌㄟˊ"],"霧":["ㄨˋ"],"冰":["ㄅㄧㄥ"],"霜":["ㄕㄨㄤ"],"露":["ㄌㄨˋ","ㄌㄡˋ"],"潮":["ㄔㄠˊ"],"溼":["ㄕ"],"手":["ㄕㄡˇ"],"腳":["ㄐㄧㄠˇ"],"眼":["ㄧㄢˇ"],"耳":["ㄦˇ"],"鼻":["ㄅㄧˊ"],"嘴":["ㄗㄨㄟˇ"],"牙":["ㄧㄚˊ"],"藥":["ㄧㄠˋ"],"醫":["ㄧ"],"院":["ㄩㄢˋ"],"傷":["ㄕㄤ"],"痛":["ㄊㄨㄥˋ"],"休":["ㄒㄧㄡ"],"跟":["ㄍㄣ"],"或":["ㄏㄨㄛˋ"],"但":["ㄉㄢˋ"],"因":["ㄧㄣ"],"如":["ㄖㄨˊ"],"被":["ㄅㄟˋ"],"從":["ㄘㄨㄥˊ"],"向":["ㄒㄧㄤˋ"],"往":["ㄨㄤˇ","ㄨㄤˋ"],"離":["ㄌㄧˊ"],"著":["˙ㄓㄜ","ㄓㄠˊ","ㄓㄨˋ","ㄓㄠ"],"過":["ㄍㄨㄛˋ","ㄍㄨㄛ"],"住":["ㄓㄨˋ"],"認":["ㄖㄣˋ"],"努":["ㄋㄨˇ"],"力":["ㄌㄧˋ"],"進":["ㄐㄧㄣˋ"],"步":["ㄅㄨˋ"],"優":["ㄧㄡ"],"秀":["ㄒㄧㄡˋ"],"乖":["ㄍㄨㄞ"],"巧":["ㄑㄧㄠˇ"],"勇":["ㄩㄥˇ"],"敢":["ㄍㄢˇ"],"勤":["ㄑㄧㄣˊ"],"勞":["ㄌㄠˊ"],"獎":["ㄐㄧㄤˇ"],"時":["ㄕˊ"],"許":["ㄒㄩˇ"]};
+// ====== 狀態 ======
+let lines=[];           // 每行：[{han,zy,mode,readIdx} ...]
+let textMode='zy';      // zy / both / han
+let colorOn=true;
+let polyOn=false;
+let styleMode='grid';   // grid / board
+let editRef=null;       // {li,ci}
+const WEATHERS=[['晴','☀️'],['多雲','⛅'],['陰','☁️'],['雨','🌧️'],['雷','⛈️'],['風','🌬️']];
+let weather='☀️';
+const TONES=['（無）','ˊ','ˇ','ˋ','˙'];
+
+// ====== 初始 ======
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+document.getElementById('dateInput').value=todayStr();
+(function(){const h=document.getElementById('weatherSel');WEATHERS.forEach(function(w,i){const b=document.createElement('button');b.textContent=w[1];b.title=w[0];if(w[1]===weather)b.className='on';b.onclick=function(){weather=w[1];[].forEach.call(h.children,function(c){c.className='';});b.className='on';render();};h.appendChild(b);});})();
+
+// ====== 注音查詢 ======
+function lookup(ch){return ZY[ch]||null;}
+function baseZy(s){return s.replace(/[ˊˇˋ˙]/g,'').replace(/^˙/,'');}
+function toneOf(s){if(s.indexOf('˙')===0||s.indexOf('˙')>-1)return '˙';if(s.indexOf('ˊ')>-1)return 'ˊ';if(s.indexOf('ˇ')>-1)return 'ˇ';if(s.indexOf('ˋ')>-1)return 'ˋ';return '（無）';}
+
+// ====== 產生 ======
+function generate(){
+  const raw=document.getElementById('input').value.split('\n').map(function(s){return s.trim();}).filter(function(s){return s.length;});
+  const use=raw.slice(0,10);
+  lines=use.map(function(line){
+    return Array.from(line).map(function(ch){
+      const reads=lookup(ch);
+      if(/\s/.test(ch))return null;
+      return {han:ch,zy:reads?reads[0]:'',mode:'auto',readIdx:0,reads:reads||[]};
+    }).filter(function(x){return x;});
+  });
+  render();
+}
+function clearAll(){document.getElementById('input').value='';lines=[];render();}
+
+// ====== 渲染 ======
+function render(){
+  const host=document.getElementById('sheetHost');
+  if(!lines.length){host.innerHTML='<div class="blank-tip">在上面打字後<br>按「產生聯絡簿」<br>這裡就會出現一字一格的注音聯絡簿 👆</div>';return;}
+  const di=document.getElementById('dateInput').value;
+  let dateCol='';
+  if(di){const d=new Date(di+'T00:00:00');const wd=['日','一','二','三','四','五','六'][d.getDay()];
+    const roc=d.getFullYear()-1911;
+    const dstr=roc+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日 星期'+wd;
+    let dchars=Array.from(dstr).map(function(c){return c===' '?'<div class="dgap"></div>':'<div class="dch">'+c+'</div>';}).join('');
+    dateCol='<td class="date-col"><div class="dcol">'+dchars+'</div><div class="wth">'+weather+'</div></td>';
+  }
+  const maxLen=Math.max.apply(null,lines.map(function(l){return l.length;}));
+  // 表頭欄號（rtl，所以第1欄在最右）
+  let head='<tr><td class="col-num date-h">日期</td>';
+  for(let i=0;i<lines.length;i++){head+='<td class="col-num">'+(i+1)+'</td>';}
+  head+='</tr>';
+  // 內容：每一列是一個「字的位置」，每一欄一行項目
+  let body='';
+  body+='<tr>';
+  body+=dateCol;
+  for(let li=0;li<lines.length;li++){
+    const colorCls=colorOn?('cc'+((li%10)+1)):'';
+    let cell='<td class="cell '+colorCls+'">';
+    lines[li].forEach(function(g,ci){cell+=guHtml(g,li,ci);});
+    cell+='</td>';
+    body+=cell;
+  }
+  body+='</tr>';
+  host.innerHTML='<div class="sheet-scroll"><table class="sheet">'+head+body+'</table></div>';
+}
+
+function guHtml(g,li,ci){
+  let showHan=(textMode==='han'||textMode==='both'||g.mode==='han');
+  let showZy=(textMode==='zy'||textMode==='both')&&g.mode!=='han'&&g.zy;
+  let needFix=false;
+  if(textMode==='zy'&&g.mode!=='han'){
+    if(g.zy){showHan=false;showZy=true;}
+    else{showHan=true;showZy=false;needFix=true;} // 純注音但查不到 → 顯示國字+提示補
+  }
+  if(textMode==='han')showZy=false;
+  const poly=(polyOn&&g.reads&&g.reads.length>1)?' poly':'';
+  const hanOnly=(!showZy)?' han-only':'';
+  const fix=needFix?' need-fix':'';
+  let inner='';
+  if(showHan)inner+='<span class="han">'+g.han+'</span>';
+  if(showZy){
+    inner+=zyHtml(g.zy);
+  }
+  return '<div class="gu'+poly+hanOnly+fix+'" onclick="openEdit('+li+','+ci+')">'+inner+'</div>';
+}
+
+function zyHtml(zy){
+  // 分離聲調：˙輕聲(放上方)、ˊˇˋ(放右側中間)、一聲(無符號)
+  let light = zy.indexOf('˙')>-1;
+  let tone = '';
+  ['ˊ','ˇ','ˋ'].forEach(function(t){ if(zy.indexOf(t)>-1) tone=t; });
+  let core = zy.replace(/[˙ˊˇˋ]/g,'');
+  let coreSpans = Array.from(core).map(function(c){return '<span>'+c+'</span>';}).join('');
+  let lightHtml = light ? '<span class="zy-light">˙</span>' : '';
+  let toneHtml = tone ? '<span class="zy-tone">'+tone+'</span>' : '';
+  return '<span class="zy">'+lightHtml+'<span class="zy-core">'+coreSpans+'</span>'+toneHtml+'</span>';
+}
+
+// ====== 文字模式 ======
+function setTextMode(m){textMode=m;['mZy','mBoth','mHan'].forEach(function(id){document.getElementById(id).className='';});
+  document.getElementById(m==='zy'?'mZy':m==='both'?'mBoth':'mHan').className='on';render();}
+function toggleColor(){colorOn=!colorOn;document.getElementById('bColor').className='btn-ghost'+(colorOn?' on':'');render();}
+function togglePoly(){polyOn=!polyOn;document.getElementById('bPoly').className='btn-ghost'+(polyOn?' on':'');document.getElementById('bPoly').textContent='🔸 多音提醒：'+(polyOn?'開':'關');render();}
+function toggleStyle(){styleMode=styleMode==='grid'?'board':'grid';
+  document.getElementById('bStyle').textContent='切換：'+(styleMode==='grid'?'格子底':'黑板底');
+  document.body.classList.toggle('board-mode',styleMode==='board');render();}
+
+// ====== 編輯彈窗 ======
+function openEdit(li,ci){editRef={li:li,ci:ci};const g=lines[li][ci];
+  document.getElementById('mCur').textContent=g.han+(g.zy?(' '+g.zy):'');
+  mSetMode(g.mode==='han'?'han':'zy');
+  // 讀音 chips
+  const rh=document.getElementById('mReads');rh.innerHTML='';
+  (g.reads&&g.reads.length?g.reads:[g.zy]).forEach(function(r,i){if(!r)return;const c=document.createElement('div');c.className='read-chip'+(r===g.zy?' sel':'');c.textContent=r;c.onclick=function(){g.zy=r;document.getElementById('mZyInput').value=r;[].forEach.call(rh.children,function(x){x.className='read-chip';});c.className='read-chip sel';syncTone();};rh.appendChild(c);});
+  document.getElementById('mZyInput').value=g.zy||'';
+  buildTones();syncTone();
+  document.getElementById('modalBg').classList.add('show');
+}
+function buildTones(){const th=document.getElementById('mTones');th.innerHTML='';TONES.forEach(function(t){const b=document.createElement('div');b.className='tone-btn';b.textContent=t;b.dataset.t=t;b.onclick=function(){applyTone(t);[].forEach.call(th.children,function(x){x.className='tone-btn';});b.className='tone-btn sel';};th.appendChild(b);});}
+function syncTone(){const v=document.getElementById('mZyInput').value;const t=toneOf(v);[].forEach.call(document.getElementById('mTones').children,function(b){b.className='tone-btn'+(b.dataset.t===t?' sel':'');});}
+function applyTone(t){let v=baseZy(document.getElementById('mZyInput').value).replace(/^˙/,'');if(t==='˙'){v='˙'+v;}else if(t!=='（無）'){v=v+t;}document.getElementById('mZyInput').value=v;}
+function mSetMode(m){document.getElementById('segZy').className=m==='zy'?'on':'';document.getElementById('segHan').className=m==='han'?'on':'';document.getElementById('zyArea').style.display=m==='han'?'none':'block';if(editRef)lines[editRef.li][editRef.ci]._tmpMode=m;}
+function saveEdit(){if(!editRef)return;const g=lines[editRef.li][editRef.ci];const m=g._tmpMode||'zy';if(m==='han'){g.mode='han';}else{g.mode='auto';g.zy=document.getElementById('mZyInput').value.trim();}delete g._tmpMode;closeModal();render();}
+function closeModal(){document.getElementById('modalBg').classList.remove('show');editRef=null;}
+
+// ====== 複製 ======
+function toast(msg){let t=document.createElement('div');t.textContent=msg;t.style.cssText='position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#1f2430;color:#fff;padding:11px 20px;border-radius:22px;font-size:14px;z-index:99;opacity:0;transition:opacity .2s;';document.body.appendChild(t);requestAnimationFrame(function(){t.style.opacity='1';});setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},250);},1600);}
+function copyText(){if(!lines.length){toast('還沒有內容');return;}let out=lines.map(function(l){return l.map(function(g){return (g.mode==='han'||textMode==='han')?g.han:(g.zy||g.han);}).join('');}).join('\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(out).then(function(){toast('已複製文字！');},function(){fallbackCopy(out);});}else{fallbackCopy(out);}}
+function fallbackCopy(text){let ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0;';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('已複製文字！');}catch(e){toast('請長按手動複製');}ta.remove();}
+
+render();
+</script>
+</body>
+</html>
